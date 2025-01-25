@@ -24,7 +24,6 @@ messageLabel.TextSize = 20
 messageLabel.TextStrokeTransparency = 0.8
 messageLabel.Visible = false
 
--- Function to find all potential targets
 local function findTargets()
     local targets = {}
     for _, player in ipairs(Players:GetPlayers()) do
@@ -35,7 +34,6 @@ local function findTargets()
     return targets
 end
 
--- Function to get the closest target
 local function getClosestTarget()
     local mouse = LocalPlayer:GetMouse()
     local closestTarget = nil
@@ -55,7 +53,6 @@ local function getClosestTarget()
     return closestTarget
 end
 
--- Function to update aim assist
 local function updateAimAssist(deltaTime)
     if CurrentTarget then
         local targetPosition = CurrentTarget.Position
@@ -68,7 +65,14 @@ local function updateAimAssist(deltaTime)
     end
 end
 
--- Start aim assist
+local function isMouseNearCenter()
+    local mouse = LocalPlayer:GetMouse()
+    local screenSize = workspace.CurrentCamera.ViewportSize
+    local center = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
+    local distanceFromCenter = (Vector2.new(mouse.X, mouse.Y) - center).Magnitude
+    return distanceFromCenter < 100
+end
+
 local function startAimAssist()
     Locking = true
     CurrentTarget = getClosestTarget()
@@ -90,7 +94,6 @@ local function startAimAssist()
     end
 end
 
--- Stop aim assist
 local function stopAimAssist()
     Locking = false
     CurrentTarget = nil
@@ -101,7 +104,6 @@ local function stopAimAssist()
     end
 end
 
--- Function to slide up the label (visibility)
 local function slideUpLabel()
     messageLabel.Visible = true
     local startPos = messageLabel.Position
@@ -113,7 +115,6 @@ local function slideUpLabel()
     end
 end
 
--- Function to slide down the label (hide)
 local function slideDownLabel()
     local startPos = messageLabel.Position
     local targetPos = UDim2.new(0.5, -125, 1, 0)
@@ -125,26 +126,31 @@ local function slideDownLabel()
     messageLabel.Visible = false
 end
 
--- Toggle aim assist on/off when E key is pressed
 UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.E then
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
         if AimAssistEnabled then
             messageLabel.Text = "Aim Assist is ON"
             slideUpLabel()
-            startAimAssist()  -- Automatically start aim assist when E is pressed
         else
             messageLabel.Text = "Aim Assist is OFF"
             slideDownLabel()
-            stopAimAssist()  -- Automatically stop aim assist when E is pressed again
         end
     end
 end)
 
--- Stop aim assist when E key is released
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        if AimAssistEnabled then
+            startAimAssist()
+        end
+    end
+end)
+
 UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.E then
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
         stopAimAssist()
     end
 end)
+
 
