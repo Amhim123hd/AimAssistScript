@@ -1,4 +1,3 @@
-
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -12,6 +11,8 @@ local AimAssistEnabled = false
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = LocalPlayer.PlayerGui
+
+-- Create a label to show script execution message
 local messageLabel = Instance.new("TextLabel")
 messageLabel.Parent = screenGui
 messageLabel.Size = UDim2.new(0, 250, 0, 50)
@@ -174,3 +175,13 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+-- Show a message when the script is executed
+local function showExecutionMessage()
+    messageLabel.Text = "Script Activated!"
+    slideUpLabel()
+    wait(3)  -- Keep the message visible for 3 seconds
+    slideDownLabel()
+end
+
+showExecutionMessage()
