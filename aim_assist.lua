@@ -71,7 +71,7 @@ local function updateAimAssist(deltaTime)
         local targetPosition = CurrentTarget.Position
         local currentCameraDirection = Camera.CFrame.LookVector
         local desiredDirection = (targetPosition - Camera.CFrame.Position).Unit
-        local smoothSpeed = 0.5
+        local smoothSpeed = 1
 
         local newDirection = currentCameraDirection:Lerp(desiredDirection, smoothSpeed)
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + newDirection)
@@ -143,10 +143,10 @@ UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
         if AimAssistEnabled then
-            messageLabel.Text = "Aim Assist is ONv2"
+            messageLabel.Text = "Aim Assist is ONv3"
             slideUpLabel()
         else
-            messageLabel.Text = "Aim Assist is OFFv2"
+            messageLabel.Text = "Aim Assist is OFFv3"
             slideDownLabel()
         end
     end
