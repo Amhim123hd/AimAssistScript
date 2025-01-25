@@ -38,13 +38,16 @@ local function getClosestTarget()
     local mouse = LocalPlayer:GetMouse()
     local closestTarget = nil
     local closestDistance = math.huge
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, target in ipairs(findTargets()) do
         local screenPoint = Camera:WorldToScreenPoint(target.Position)
         local mousePos = Vector2.new(mouse.X, mouse.Y)
         local distance = (mousePos - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
+        local distanceToCenter = (Vector2.new(screenPoint.X, screenPoint.Y) - screenCenter).Magnitude
 
-        if distance < closestDistance and distance < 150 then
+        -- Prioritize the closest target to the middle of the screen or the closest player
+        if distance < closestDistance and (distance < 150 or distanceToCenter < 150) then
             closestDistance = distance
             closestTarget = target
         end
@@ -152,6 +155,3 @@ UserInputService.InputEnded:Connect(function(input)
         stopAimAssist()
     end
 end)
-
-
-
