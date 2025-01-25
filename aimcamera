@@ -1,8 +1,15 @@
 local UserInputService = game:GetService("UserInputService")
 local Camera = game.Workspace.CurrentCamera
 
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.R then
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    -- Ignore input if it is being processed by other game features
+    if gameProcessed then return end
+    
+    -- Check if the input is a left mouse click
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        print("Mouse Click Detected!")  -- Debugging line to confirm the input
+
+        -- Move the camera to the right when left mouse button is clicked
         Camera.CFrame = Camera.CFrame * CFrame.new(5, 0, 0)  -- Move camera to the right
     end
 end)
