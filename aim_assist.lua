@@ -10,10 +10,6 @@ local CurrentTarget = nil
 local HeartbeatConnection = nil
 local AimAssistEnabled = false
 
-local Settings = {
-    WallCheck = true  -- Enable or disable the wall check
-}
-
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = LocalPlayer.PlayerGui
 local messageLabel = Instance.new("TextLabel")
@@ -50,21 +46,9 @@ local function findTargets()
 end
 
 local function isTargetBehindWall(targetPosition)
-    if Settings.WallCheck then
-        local BlacklistTable = {}
-        
-        -- Add LocalPlayer's character parts to the blacklist
-        for _, value in next, LocalPlayer.Character:GetDescendants() do
-            table.insert(BlacklistTable, value)
-        end
-
-        -- Check if any parts obstruct the line of sight to the target
-        local partsObscuring = Camera:FindPartsObscuringTarget(targetPosition, BlacklistTable)
-        if #partsObscuring > 0 then
-            return true
-        end
-    end
-    return false
+    local ray = Ray.new(Camera.CFrame.Position, (targetPosition - Camera.CFrame.Position).unit * 100)
+    local hit, position = workspace:FindPartOnRay(ray, LocalPlayer.Character)
+    return hit and hit:IsA("Part")
 end
 
 local function isTargetOnOpposingTeam(target)
@@ -176,10 +160,10 @@ UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
         if AimAssistEnabled then
-            messageLabel.Text = "Aim Assist is ONv9"
+            messageLabel.Text = "Aim Assist is ONv3"
             slideUpLabel()
         else
-            messageLabel.Text = "Aim Assist is OFFv9"
+            messageLabel.Text = "Aim Assist is OFFv3"
             slideDownLabel()
         end
     end
