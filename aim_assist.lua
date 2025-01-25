@@ -71,7 +71,7 @@ local function updateAimAssist(deltaTime)
         local targetPosition = CurrentTarget.Position
         local currentCameraDirection = Camera.CFrame.LookVector
         local desiredDirection = (targetPosition - Camera.CFrame.Position).Unit
-        local smoothSpeed = 0.050
+        local smoothSpeed = 0.5
 
         local newDirection = currentCameraDirection:Lerp(desiredDirection, smoothSpeed)
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + newDirection)
