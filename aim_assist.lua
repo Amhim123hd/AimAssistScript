@@ -26,11 +26,21 @@ messageLabel.Visible = false
 
 local function findTargets()
     local targets = {}
+    
+    -- Add players as targets
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
             table.insert(targets, player.Character.Head)
         end
     end
+    
+    -- Add NPCs or bots as targets
+    for _, npc in ipairs(workspace:GetChildren()) do
+        if npc:IsA("Model") and npc:FindFirstChild("Head") and npc.Name ~= LocalPlayer.Name then
+            table.insert(targets, npc.Head)
+        end
+    end
+
     return targets
 end
 
@@ -133,10 +143,10 @@ UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
         if AimAssistEnabled then
-            messageLabel.Text = "Aim Assist is ON"
+            messageLabel.Text = "Aim Assist is ONv2"
             slideUpLabel()
         else
-            messageLabel.Text = "Aim Assist is OFF"
+            messageLabel.Text = "Aim Assist is OFFv2"
             slideDownLabel()
         end
     end
