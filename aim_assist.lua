@@ -3,11 +3,16 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local Teams = game:GetService("Teams")
 
 local Locking = false
 local CurrentTarget = nil
 local HeartbeatConnection = nil
 local AimAssistEnabled = false
+
+local Settings = {
+    WallCheck = true  -- Enable or disable the wall check
+}
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = LocalPlayer.PlayerGui
@@ -26,14 +31,14 @@ messageLabel.Visible = false
 
 local function findTargets()
     local targets = {}
-    
+
     -- Add players as targets
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
             table.insert(targets, player.Character.Head)
         end
     end
-    
+
     -- Add NPCs or bots as targets
     for _, npc in ipairs(workspace:GetChildren()) do
         if npc:IsA("Model") and npc:FindFirstChild("Head") and npc.Name ~= LocalPlayer.Name then
@@ -44,6 +49,32 @@ local function findTargets()
     return targets
 end
 
+local function isTargetBehindWall(targetPosition)
+    if Settings.WallCheck then
+        local BlacklistTable = {}
+        
+        -- Add LocalPlayer's character parts to the blacklist
+        for _, value in next, LocalPlayer.Character:GetDescendants() do
+            table.insert(BlacklistTable, value)
+        end
+
+        -- Check if any parts obstruct the line of sight to the target
+        local partsObscuring = Camera:FindPartsObscuringTarget(targetPosition, BlacklistTable)
+        if #partsObscuring > 0 then
+            return true
+        end
+    end
+    return false
+end
+
+local function isTargetOnOpposingTeam(target)
+    local targetPlayer = Players:GetPlayerFromCharacter(target.Parent)
+    if targetPlayer then
+        return targetPlayer.Team ~= LocalPlayer.Team
+    end
+    return true  -- Default to true if it's not a player (e.g., NPCs)
+end
+
 local function getClosestTarget()
     local mouse = LocalPlayer:GetMouse()
     local closestTarget = nil
@@ -51,15 +82,17 @@ local function getClosestTarget()
     local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, target in ipairs(findTargets()) do
-        local screenPoint = Camera:WorldToScreenPoint(target.Position)
-        local mousePos = Vector2.new(mouse.X, mouse.Y)
-        local distance = (mousePos - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
-        local distanceToCenter = (Vector2.new(screenPoint.X, screenPoint.Y) - screenCenter).Magnitude
+        if not isTargetBehindWall(target.Position) and isTargetOnOpposingTeam(target) then
+            local screenPoint = Camera:WorldToScreenPoint(target.Position)
+            local mousePos = Vector2.new(mouse.X, mouse.Y)
+            local distance = (mousePos - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
+            local distanceToCenter = (Vector2.new(screenPoint.X, screenPoint.Y) - screenCenter).Magnitude
 
-        -- Prioritize the closest target to the middle of the screen or the closest player
-        if distance < closestDistance and (distance < 150 or distanceToCenter < 150) then
-            closestDistance = distance
-            closestTarget = target
+            -- Prioritize the closest target to the middle of the screen or the closest player
+            if distance < closestDistance and (distance < 150 or distanceToCenter < 150) then
+                closestDistance = distance
+                closestTarget = target
+            end
         end
     end
 
@@ -143,10 +176,10 @@ UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
         if AimAssistEnabled then
-            messageLabel.Text = "Aim Assist is ONv4"
+            messageLabel.Text = "Aim Assist is ONv9"
             slideUpLabel()
         else
-            messageLabel.Text = "Aim Assist is OFFv4"
+            messageLabel.Text = "Aim Assist is OFFv9"
             slideDownLabel()
         end
     end
