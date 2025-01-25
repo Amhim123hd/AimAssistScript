@@ -3,7 +3,6 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local Teams = game:GetService("Teams")
 
 local Locking = false
 local CurrentTarget = nil
@@ -27,56 +26,27 @@ messageLabel.Visible = false
 
 local function findTargets()
     local targets = {}
-
-    -- Add players as targets
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
             table.insert(targets, player.Character.Head)
         end
     end
-
-    -- Add NPCs or bots as targets
-    for _, npc in ipairs(workspace:GetChildren()) do
-        if npc:IsA("Model") and npc:FindFirstChild("Head") and npc.Name ~= LocalPlayer.Name then
-            table.insert(targets, npc.Head)
-        end
-    end
-
     return targets
-end
-
-local function isTargetBehindWall(targetPosition)
-    local ray = Ray.new(Camera.CFrame.Position, (targetPosition - Camera.CFrame.Position).unit * 100)
-    local hit, position = workspace:FindPartOnRay(ray, LocalPlayer.Character)
-    return hit and hit:IsA("Part")
-end
-
-local function isTargetOnOpposingTeam(target)
-    local targetPlayer = Players:GetPlayerFromCharacter(target.Parent)
-    if targetPlayer then
-        return targetPlayer.Team ~= LocalPlayer.Team
-    end
-    return true  -- Default to true if it's not a player (e.g., NPCs)
 end
 
 local function getClosestTarget()
     local mouse = LocalPlayer:GetMouse()
     local closestTarget = nil
     local closestDistance = math.huge
-    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, target in ipairs(findTargets()) do
-        if not isTargetBehindWall(target.Position) and isTargetOnOpposingTeam(target) then
-            local screenPoint = Camera:WorldToScreenPoint(target.Position)
-            local mousePos = Vector2.new(mouse.X, mouse.Y)
-            local distance = (mousePos - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
-            local distanceToCenter = (Vector2.new(screenPoint.X, screenPoint.Y) - screenCenter).Magnitude
+        local screenPoint = Camera:WorldToScreenPoint(target.Position)
+        local mousePos = Vector2.new(mouse.X, mouse.Y)
+        local distance = (mousePos - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
 
-            -- Prioritize the closest target to the middle of the screen or the closest player
-            if distance < closestDistance and (distance < 150 or distanceToCenter < 150) then
-                closestDistance = distance
-                closestTarget = target
-            end
+        if distance < closestDistance and distance < 150 then
+            closestDistance = distance
+            closestTarget = target
         end
     end
 
@@ -160,10 +130,10 @@ UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
         if AimAssistEnabled then
-            messageLabel.Text = "Aim Assist is ONv3"
+            messageLabel.Text = "Aim Assist is ON"
             slideUpLabel()
         else
-            messageLabel.Text = "Aim Assist is OFFv3"
+            messageLabel.Text = "Aim Assist is OFF"
             slideDownLabel()
         end
     end
@@ -182,3 +152,4 @@ UserInputService.InputEnded:Connect(function(input)
         stopAimAssist()
     end
 end)
+
