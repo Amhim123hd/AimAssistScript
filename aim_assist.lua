@@ -24,35 +24,24 @@ messageLabel.TextSize = 20
 messageLabel.TextStrokeTransparency = 0.8
 messageLabel.Visible = false
 
-local function findTargets()
-    local targets = {}
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-            table.insert(targets, player.Character.Head)
-        end
-    end
-    return targets
-end
+-- Function to get the player under the mouse cursor using raycasting
+local function getTargetUnderCursor()
+    local mousePos = UserInputService:GetMouseLocation()
+    local rayOrigin = Camera.CFrame.Position
+    local rayDirection = (Camera:ScreenToWorldPoint(Vector3.new(mousePos.X, mousePos.Y, 0)) - rayOrigin).unit * 1000
+    local ray = Ray.new(rayOrigin, rayDirection)
+    local hit, position = workspace:FindPartOnRay(ray, LocalPlayer.Character)
 
-local function getClosestTarget()
-    local closestTarget = nil
-    local closestDistance = math.huge
-
-    for _, target in ipairs(findTargets()) do
-        local distance = (LocalPlayer.Character.Head.Position - target.Position).Magnitude
-
-        if distance < closestDistance and distance < 50 then -- Adjust the range as needed
-            closestDistance = distance
-            closestTarget = target
-        end
+    if hit and hit.Parent and hit.Parent:FindFirstChild("Humanoid") then
+        return hit.Parent
     end
 
-    return closestTarget
+    return nil
 end
 
 local function updateAimAssist(deltaTime)
     if CurrentTarget then
-        local targetPosition = CurrentTarget.Position
+        local targetPosition = CurrentTarget.HumanoidRootPart.Position
         local currentCameraDirection = Camera.CFrame.LookVector
         local desiredDirection = (targetPosition - Camera.CFrame.Position).Unit
         local smoothSpeed = 0.3
@@ -64,7 +53,7 @@ end
 
 local function startAimAssist()
     Locking = true
-    CurrentTarget = getClosestTarget()
+    CurrentTarget = getTargetUnderCursor()
 
     if HeartbeatConnection then
         HeartbeatConnection:Disconnect()
