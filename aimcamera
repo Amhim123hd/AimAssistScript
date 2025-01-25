@@ -1,4 +1,3 @@
--- A simple test script that moves the camera to the right when you press the "R" key
 local UserInputService = game:GetService("UserInputService")
 local Camera = game.Workspace.CurrentCamera
 
