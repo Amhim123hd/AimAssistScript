@@ -143,10 +143,10 @@ UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
         if AimAssistEnabled then
-            messageLabel.Text = "Aim Assist is ONv3"
+            messageLabel.Text = "Aim Assist is ONv4"
             slideUpLabel()
         else
-            messageLabel.Text = "Aim Assist is OFFv3"
+            messageLabel.Text = "Aim Assist is OFFv4"
             slideDownLabel()
         end
     end
