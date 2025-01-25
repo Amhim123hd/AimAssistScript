@@ -1,0 +1,9 @@
+-- A simple test script that moves the camera to the right when you press the "R" key
+local UserInputService = game:GetService("UserInputService")
+local Camera = game.Workspace.CurrentCamera
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.R then
+        Camera.CFrame = Camera.CFrame * CFrame.new(5, 0, 0)  -- Move camera to the right
+    end
+end)
