@@ -11,8 +11,6 @@ local AimAssistEnabled = false
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = LocalPlayer.PlayerGui
-
--- Create a label to show script execution message
 local messageLabel = Instance.new("TextLabel")
 messageLabel.Parent = screenGui
 messageLabel.Size = UDim2.new(0, 250, 0, 50)
@@ -26,29 +24,35 @@ messageLabel.TextSize = 20
 messageLabel.TextStrokeTransparency = 0.8
 messageLabel.Visible = false
 
--- Function to find the closest target player near you
-local function getClosestTarget()
-    local closestTarget = nil
-    local closestDistance = math.huge
-    local playerPosition = LocalPlayer.Character.HumanoidRootPart.Position
-
-    -- Check all players for the closest one
+local function findTargets()
+    local targets = {}
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-            local targetPosition = player.Character.Head.Position
-            local distance = (playerPosition - targetPosition).Magnitude
+            table.insert(targets, player.Character.Head)
+        end
+    end
+    return targets
+end
 
-            if distance < closestDistance and distance < 50 then -- Adjust 50 to your desired range
-                closestDistance = distance
-                closestTarget = player.Character.Head
-            end
+local function getClosestTarget()
+    local mouse = LocalPlayer:GetMouse()
+    local closestTarget = nil
+    local closestDistance = math.huge
+
+    for _, target in ipairs(findTargets()) do
+        local screenPoint = Camera:WorldToScreenPoint(target.Position)
+        local mousePos = Vector2.new(mouse.X, mouse.Y)
+        local distance = (mousePos - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
+
+        if distance < closestDistance and distance < 150 then
+            closestDistance = distance
+            closestTarget = target
         end
     end
 
     return closestTarget
 end
 
--- Function to update the camera's aim
 local function updateAimAssist(deltaTime)
     if CurrentTarget then
         local targetPosition = CurrentTarget.Position
@@ -61,7 +65,14 @@ local function updateAimAssist(deltaTime)
     end
 end
 
--- Start the aim assist when right-click is held
+local function isMouseNearCenter()
+    local mouse = LocalPlayer:GetMouse()
+    local screenSize = workspace.CurrentCamera.ViewportSize
+    local center = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
+    local distanceFromCenter = (Vector2.new(mouse.X, mouse.Y) - center).Magnitude
+    return distanceFromCenter < 100
+end
+
 local function startAimAssist()
     Locking = true
     CurrentTarget = getClosestTarget()
@@ -83,7 +94,6 @@ local function startAimAssist()
     end
 end
 
--- Stop the aim assist
 local function stopAimAssist()
     Locking = false
     CurrentTarget = nil
@@ -94,7 +104,6 @@ local function stopAimAssist()
     end
 end
 
--- Show and hide the message label
 local function slideUpLabel()
     messageLabel.Visible = true
     local startPos = messageLabel.Position
@@ -117,7 +126,6 @@ local function slideDownLabel()
     messageLabel.Visible = false
 end
 
--- Toggle the aim assist on and off when pressing "J"
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
@@ -131,7 +139,6 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
--- Trigger aim assist on right-click (MouseButton2)
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         if AimAssistEnabled then
@@ -140,48 +147,10 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
--- Stop aim assist when right-click is released
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         stopAimAssist()
     end
 end)
 
--- Update the aim assist while the right mouse button is held
-UserInputService.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        if input.UserInputState == Enum.UserInputState.Begin then
-            if AimAssistEnabled then
-                startAimAssist()
-            end
-        elseif input.UserInputState == Enum.UserInputState.End then
-            stopAimAssist()
-        end
-    end
-end)
 
--- Update the aim assist every frame
-RunService.RenderStepped:Connect(function()
-    if Locking then
-        CurrentTarget = getClosestTarget()
-        if CurrentTarget then
-            local targetPosition = CurrentTarget.Position
-            local currentCameraDirection = Camera.CFrame.LookVector
-            local desiredDirection = (targetPosition - Camera.CFrame.Position).Unit
-            local smoothSpeed = 0.050
-
-            local newDirection = currentCameraDirection:Lerp(desiredDirection, smoothSpeed)
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + newDirection)
-        end
-    end
-end)
-
--- Show a message when the script is executed
-local function showExecutionMessage()
-    messageLabel.Text = "Script Activated!"
-    slideUpLabel()
-    wait(3)  -- Keep the message visible for 3 seconds
-    slideDownLabel()
-end
-
-showExecutionMessage()
