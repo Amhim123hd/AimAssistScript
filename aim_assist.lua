@@ -9,8 +9,14 @@ local CurrentTarget = nil
 local HeartbeatConnection = nil
 local AimAssistEnabled = false
 
+local FOV_RADIUS = 150 -- Radius of the FOV circle
+local FOV_CIRCLE_COLOR = Color3.fromRGB(255, 255, 0) -- Color of the FOV circle
+local FOV_CIRCLE_THICKNESS = 2 -- Thickness of the circle's border
+
+-- Create GUI elements
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = LocalPlayer.PlayerGui
+
 local messageLabel = Instance.new("TextLabel")
 messageLabel.Parent = screenGui
 messageLabel.Size = UDim2.new(0, 250, 0, 50)
@@ -24,6 +30,26 @@ messageLabel.TextSize = 20
 messageLabel.TextStrokeTransparency = 0.8
 messageLabel.Visible = false
 
+local fovCircle = Instance.new("Frame")
+fovCircle.Parent = screenGui
+fovCircle.Size = UDim2.new(0, FOV_RADIUS * 2, 0, FOV_RADIUS * 2)
+fovCircle.Position = UDim2.new(0.5, -FOV_RADIUS, 0.5, -FOV_RADIUS)
+fovCircle.BackgroundTransparency = 1
+
+local circleOutline = Instance.new("UICorner")
+circleOutline.CornerRadius = UDim.new(1, 0)
+circleOutline.Parent = fovCircle
+
+local circleImage = Instance.new("ImageLabel")
+circleImage.Parent = fovCircle
+circleImage.Size = UDim2.new(1, 0, 1, 0)
+circleImage.Position = UDim2.new(0, 0, 0, 0)
+circleImage.BackgroundTransparency = 1
+circleImage.Image = "rbxassetid://7969513254" -- Circular image
+circleImage.ImageColor3 = FOV_CIRCLE_COLOR
+circleImage.ImageTransparency = 0.5
+circleImage.BorderSizePixel = 0
+
 local function findTargets()
     local targets = {}
     for _, player in ipairs(Players:GetPlayers()) do
@@ -35,17 +61,18 @@ local function findTargets()
 end
 
 local function getClosestTarget()
-    local mouse = LocalPlayer:GetMouse()
+    local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     local closestTarget = nil
     local closestDistance = math.huge
 
     for _, target in ipairs(findTargets()) do
         local screenPoint = Camera:WorldToScreenPoint(target.Position)
-        local mousePos = Vector2.new(mouse.X, mouse.Y)
-        local distance = (mousePos - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
+        local targetPosition = Vector2.new(screenPoint.X, screenPoint.Y)
+        local distanceFromCenter = (targetPosition - centerScreen).Magnitude
 
-        if distance < closestDistance and distance < 150 then
-            closestDistance = distance
+        -- Check if the target is within the FOV circle
+        if distanceFromCenter < closestDistance and distanceFromCenter < FOV_RADIUS then
+            closestDistance = distanceFromCenter
             closestTarget = target
         end
     end
@@ -63,14 +90,6 @@ local function updateAimAssist(deltaTime)
         local newDirection = currentCameraDirection:Lerp(desiredDirection, smoothSpeed)
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + newDirection)
     end
-end
-
-local function isMouseNearCenter()
-    local mouse = LocalPlayer:GetMouse()
-    local screenSize = workspace.CurrentCamera.ViewportSize
-    local center = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
-    local distanceFromCenter = (Vector2.new(mouse.X, mouse.Y) - center).Magnitude
-    return distanceFromCenter < 100
 end
 
 local function startAimAssist()
@@ -152,4 +171,3 @@ UserInputService.InputEnded:Connect(function(input)
         stopAimAssist()
     end
 end)
-
