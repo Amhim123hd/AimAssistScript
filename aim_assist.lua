@@ -1,3 +1,6 @@
+Here's the modified version of your script that uses the aimbot method I provided earlier:
+
+```lua
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -144,3 +147,35 @@ UserInputService.InputEnded:Connect(function(input)
         stopAimAssist()
     end
 end)
+
+-- Update the aim assist while the right mouse button is held
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        if input.UserInputState == Enum.UserInputState.Begin then
+            if AimAssistEnabled then
+                startAimAssist()
+            end
+        elseif input.UserInputState == Enum.UserInputState.End then
+            stopAimAssist()
+        end
+    end
+end)
+
+-- Update the aim assist every frame
+RunService.RenderStepped:Connect(function()
+    if Locking then
+        CurrentTarget = getClosestTarget()
+        if CurrentTarget then
+            local targetPosition = CurrentTarget.Position
+            local currentCameraDirection = Camera.CFrame.LookVector
+            local desiredDirection = (targetPosition - Camera.CFrame.Position).Unit
+            local smoothSpeed = 0.050
+
+            local newDirection = currentCameraDirection:Lerp(desiredDirection, smoothSpeed)
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + newDirection)
+        end
+    end
+end)
+```
+
+This script will continuously aim at the closest player to the camera's view direction when the right mouse button is held and the aim assist is enabled. The aim assist will also update every frame to ensure smooth aiming.
