@@ -10,7 +10,7 @@ local HeartbeatConnection = nil
 local AimAssistEnabled = false
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = LocalPlayer.PlayerGui
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 local messageLabel = Instance.new("TextLabel")
 messageLabel.Parent = screenGui
 messageLabel.Size = UDim2.new(0, 250, 0, 50)
@@ -24,23 +24,33 @@ messageLabel.TextSize = 20
 messageLabel.TextStrokeTransparency = 0.8
 messageLabel.Visible = false
 
--- Function to get the player under the mouse cursor using raycasting
-local function getTargetUnderCursor()
-    local mousePos = UserInputService:GetMouseLocation()
-    local rayOrigin = Camera.CFrame.Position
-    local rayDirection = (Camera:ScreenToWorldPoint(Vector3.new(mousePos.X, mousePos.Y, 0)) - rayOrigin).unit * 1000
-    local ray = Ray.new(rayOrigin, rayDirection)
-    local hit, position = workspace:FindPartOnRay(ray, LocalPlayer.Character)
+-- Function to find the closest player to the center of the screen
+local function getClosestTarget()
+    local closestTarget = nil
+    local smallestAngle = math.huge
+    local cameraPosition = Camera.CFrame.Position
+    local cameraLookVector = Camera.CFrame.LookVector
 
-    if hit and hit.Parent and hit.Parent:FindFirstChild("Humanoid") then
-        return hit.Parent
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local character = player.Character
+            local targetPosition = character.HumanoidRootPart.Position
+            local directionToTarget = (targetPosition - cameraPosition).Unit
+            local angle = math.acos(cameraLookVector:Dot(directionToTarget))
+
+            -- Check if the target is within a reasonable field of view
+            if angle < math.rad(45) and angle < smallestAngle then
+                closestTarget = character
+                smallestAngle = angle
+            end
+        end
     end
 
-    return nil
+    return closestTarget
 end
 
 local function updateAimAssist(deltaTime)
-    if CurrentTarget then
+    if CurrentTarget and CurrentTarget:FindFirstChild("HumanoidRootPart") then
         local targetPosition = CurrentTarget.HumanoidRootPart.Position
         local currentCameraDirection = Camera.CFrame.LookVector
         local desiredDirection = (targetPosition - Camera.CFrame.Position).Unit
@@ -48,12 +58,15 @@ local function updateAimAssist(deltaTime)
 
         local newDirection = currentCameraDirection:Lerp(desiredDirection, smoothSpeed)
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + newDirection)
+    else
+        -- Stop if target is invalid
+        stopAimAssist()
     end
 end
 
 local function startAimAssist()
     Locking = true
-    CurrentTarget = getTargetUnderCursor()
+    CurrentTarget = getClosestTarget()
 
     if HeartbeatConnection then
         HeartbeatConnection:Disconnect()
@@ -65,8 +78,7 @@ local function startAimAssist()
             if Locking then
                 updateAimAssist(deltaTime)
             else
-                HeartbeatConnection:Disconnect()
-                HeartbeatConnection = nil
+                stopAimAssist()
             end
         end)
     end
@@ -104,6 +116,7 @@ local function slideDownLabel()
     messageLabel.Visible = false
 end
 
+-- Toggle Aim Assist with the "J" key
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
         AimAssistEnabled = not AimAssistEnabled
@@ -117,6 +130,7 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
+-- Start Aim Assist on right mouse button hold
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         if AimAssistEnabled then
@@ -125,6 +139,7 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
+-- Stop Aim Assist when right mouse button is released
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         stopAimAssist()
