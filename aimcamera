@@ -1,15 +1,19 @@
 local UserInputService = game:GetService("UserInputService")
-local Camera = game.Workspace.CurrentCamera
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    -- Ignore input if it is being processed by other game features
-    if gameProcessed then return end
-    
-    -- Check if the input is a left mouse click
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        print("Mouse Click Detected!")  -- Debugging line to confirm the input
-
-        -- Move the camera to the right when left mouse button is clicked
-        Camera.CFrame = Camera.CFrame * CFrame.new(5, 0, 0)  -- Move camera to the right
+local function onMouseInput(input, gameProcessedEvent)
+    -- Check if the input is a left mouse button click and not processed by the game
+    if not gameProcessedEvent and input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputState == Enum.UserInputState.Begin then
+            -- Simulate pressing the F key when the left mouse button is pressed
+            game:GetService("VirtualUser"):ClickButton1(Vector2.new(), game:GetService("Workspace"))
+            -- Press "F"
+            game:GetService("UserInputService"):InputBegan(Enum.KeyCode.F)
+        elseif input.UserInputState == Enum.UserInputState.End then
+            -- Simulate releasing the F key when the left mouse button is released
+            game:GetService("UserInputService"):InputEnded(Enum.KeyCode.F)
+        end
     end
-end)
+end
+
+UserInputService.InputBegan:Connect(onMouseInput)
+UserInputService.InputEnded:Connect(onMouseInput)
