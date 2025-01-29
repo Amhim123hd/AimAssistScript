@@ -56,7 +56,7 @@ local function getClosestTarget()
             local angle = math.acos(cameraLookVector:Dot(directionToTarget))
 
             -- Check if the target is within a reasonable field of view
-            if angle < math.rad(45) and isPlayerVisible(character) then
+            if angle < math.rad(70) and isPlayerVisible(character) then
                 closestTarget = character
                 smallestAngle = angle
             end
