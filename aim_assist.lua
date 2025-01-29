@@ -40,15 +40,12 @@ local function isPlayerVisible(targetCharacter)
     return false
 end
 
--- Function to find the closest player to the center of the screen or mouse position
+-- Function to find the closest player to the center of the screen, excluding teammates
 local function getClosestTarget()
     local closestTarget = nil
     local smallestAngle = math.huge
     local cameraPosition = Camera.CFrame.Position
     local cameraLookVector = Camera.CFrame.LookVector
-
-    -- Get the mouse's position
-    local mousePosition = UserInputService:GetMouseLocation()
 
     for _, player in ipairs(Players:GetPlayers()) do
         -- Exclude the local player and players on the same team
@@ -58,16 +55,10 @@ local function getClosestTarget()
             local directionToTarget = (targetPosition - cameraPosition).Unit
             local angle = math.acos(cameraLookVector:Dot(directionToTarget))
 
-            -- Check if the target is visible and within FOV
-            if isPlayerVisible(character) and angle < math.rad(45) then
-                -- Lock onto the closest player in the FOV or closest to the mouse
-                local screenPosition = Camera:WorldToScreenPoint(targetPosition)
-                local distance = (Vector2.new(screenPosition.X, screenPosition.Y) - mousePosition).Magnitude
-
-                if angle < smallestAngle or distance < 100 then
-                    closestTarget = character
-                    smallestAngle = angle
-                end
+            -- Check if the target is within a reasonable field of view
+            if angle < math.rad(45) and isPlayerVisible(character) then
+                closestTarget = character
+                smallestAngle = angle
             end
         end
     end
@@ -142,28 +133,6 @@ local function slideDownLabel()
     messageLabel.Visible = false
 end
 
--- Dead check function
-local function onCharacterAdded(character)
-    local humanoid = character:WaitForChild("Humanoid", 5)
-    if not humanoid then
-        return
-    end
-
-    humanoid.Died:Connect(function()
-        print("Player died!")
-        stopAimAssist()  -- Stop the aimbot when the player dies
-    end)
-end
-
--- Connect to the LocalPlayer's CharacterAdded event
-LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
-
--- Check if the character already exists on startup
-local alreadyExistingCharacter = LocalPlayer.Character
-if alreadyExistingCharacter then
-    onCharacterAdded(alreadyExistingCharacter)
-end
-
 -- Toggle Aim Assist with the "J" key
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
@@ -193,3 +162,27 @@ UserInputService.InputEnded:Connect(function(input)
         stopAimAssist()
     end
 end)
+
+-- Function to handle character death event
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid", 5)
+    if not humanoid then
+        return
+    end
+
+    humanoid.Died:Connect(function()
+        print("Player died!")
+        -- Stop aim assist if the target dies
+        stopAimAssist()
+    end)
+end
+
+game:GetService("Players").LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
+
+-- Check if there's already an existing character when the game starts
+do
+    local alreadyExistingCharacter = game:GetService("Players").LocalPlayer.Character
+    if alreadyExistingCharacter then
+        onCharacterAdded(alreadyExistingCharacter)
+    end
+end
