@@ -24,23 +24,7 @@ messageLabel.TextSize = 20
 messageLabel.TextStrokeTransparency = 0.8
 messageLabel.Visible = false
 
--- Function to check if a player is visible using raycasting
-local function isPlayerVisible(targetCharacter)
-    if not targetCharacter then return false end
-    local targetTorso = targetCharacter:FindFirstChild("HumanoidRootPart")
-    local playerTorso = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-
-    if targetTorso and playerTorso then
-        local direction = (targetTorso.Position - playerTorso.Position)
-        local ray = workspace:Raycast(playerTorso.Position, direction.Unit * direction.Magnitude)
-
-        return ray and ray.Instance and ray.Instance:IsDescendantOf(targetCharacter)
-    end
-
-    return false
-end
-
--- Function to find the closest player to the center of the screen who is visible
+-- Function to find the closest player to the center of the screen
 local function getClosestTarget()
     local closestTarget = nil
     local smallestAngle = math.huge
@@ -54,8 +38,8 @@ local function getClosestTarget()
             local directionToTarget = (targetPosition - cameraPosition).Unit
             local angle = math.acos(cameraLookVector:Dot(directionToTarget))
 
-            -- Check if target is visible and within FOV
-            if isPlayerVisible(character) and angle < math.rad(120) and angle < smallestAngle then
+            -- Check if the target is within a reasonable field of view
+            if angle < math.rad(45) and angle < smallestAngle then
                 closestTarget = character
                 smallestAngle = angle
             end
