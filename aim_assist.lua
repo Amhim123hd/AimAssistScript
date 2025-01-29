@@ -142,6 +142,28 @@ local function slideDownLabel()
     messageLabel.Visible = false
 end
 
+-- Dead check function
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid", 5)
+    if not humanoid then
+        return
+    end
+
+    humanoid.Died:Connect(function()
+        print("Player died!")
+        stopAimAssist()  -- Stop the aimbot when the player dies
+    end)
+end
+
+-- Connect to the LocalPlayer's CharacterAdded event
+LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
+
+-- Check if the character already exists on startup
+local alreadyExistingCharacter = LocalPlayer.Character
+if alreadyExistingCharacter then
+    onCharacterAdded(alreadyExistingCharacter)
+end
+
 -- Toggle Aim Assist with the "J" key
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.J then
