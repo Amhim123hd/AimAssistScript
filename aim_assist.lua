@@ -40,7 +40,7 @@ local function isPlayerVisible(targetCharacter)
     return false
 end
 
--- Function to find the closest player to the center of the screen or the cursor
+-- Function to find the closest player to the center of the screen or mouse position
 local function getClosestTarget()
     local closestTarget = nil
     local smallestAngle = math.huge
