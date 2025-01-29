@@ -40,7 +40,7 @@ local function isPlayerVisible(targetCharacter)
     return false
 end
 
--- Function to find the closest player to the center of the screen, excluding teammates
+-- Function to find the closest player to the center of the screen who is visible
 local function getClosestTarget()
     local closestTarget = nil
     local smallestAngle = math.huge
@@ -48,15 +48,14 @@ local function getClosestTarget()
     local cameraLookVector = Camera.CFrame.LookVector
 
     for _, player in ipairs(Players:GetPlayers()) do
-        -- Exclude the local player and players on the same team
-        if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local character = player.Character
             local targetPosition = character.HumanoidRootPart.Position
             local directionToTarget = (targetPosition - cameraPosition).Unit
             local angle = math.acos(cameraLookVector:Dot(directionToTarget))
 
-            -- Check if the target is within a reasonable field of view
-            if angle < math.rad(70) and isPlayerVisible(character) then
+            -- Check if target is visible and within FOV
+            if isPlayerVisible(character) and angle < math.rad(45) and angle < smallestAngle then
                 closestTarget = character
                 smallestAngle = angle
             end
@@ -162,27 +161,3 @@ UserInputService.InputEnded:Connect(function(input)
         stopAimAssist()
     end
 end)
-
--- Function to handle character death event
-local function onCharacterAdded(character)
-    local humanoid = character:WaitForChild("Humanoid", 5)
-    if not humanoid then
-        return
-    end
-
-    humanoid.Died:Connect(function()
-        print("Player died!")
-        -- Stop aim assist if the target dies
-        stopAimAssist()
-    end)
-end
-
-game:GetService("Players").LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
-
--- Check if there's already an existing character when the game starts
-do
-    local alreadyExistingCharacter = game:GetService("Players").LocalPlayer.Character
-    if alreadyExistingCharacter then
-        onCharacterAdded(alreadyExistingCharacter)
-    end
-end
