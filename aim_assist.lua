@@ -54,9 +54,19 @@ local function updateAimAssist(deltaTime)
         local targetPosition = CurrentTarget.HumanoidRootPart.Position
         local currentCameraDirection = Camera.CFrame.LookVector
         local desiredDirection = (targetPosition - Camera.CFrame.Position).Unit
-        local smoothSpeed = 2
+        local smoothSpeed = 0.2 -- Lower smooth speed
 
-        local newDirection = currentCameraDirection:Lerp(desiredDirection, smoothSpeed)
+        -- Interpolating with deltaTime to smooth the movement
+        local newDirection = currentCameraDirection:Lerp(desiredDirection, deltaTime * smoothSpeed)
+
+        -- Limiting how much the direction can change in one frame to avoid sudden jerks
+        local maxChangeRate = 0.05
+        local delta = (desiredDirection - currentCameraDirection).Unit
+        if delta.Magnitude > maxChangeRate then
+            delta = delta.Unit * maxChangeRate
+        end
+        newDirection = currentCameraDirection + delta
+
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + newDirection)
     else
         -- Stop if target is invalid
