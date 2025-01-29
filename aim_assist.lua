@@ -24,35 +24,31 @@ messageLabel.TextSize = 20
 messageLabel.TextStrokeTransparency = 0.8
 messageLabel.Visible = false
 
--- Function to check if a player is visible using raycasting, ensuring no obstructions (walls/glass)
+-- Function to check if a player is visible using raycasting
 local function isPlayerVisible(targetCharacter)
     if not targetCharacter then return false end
     local targetTorso = targetCharacter:FindFirstChild("HumanoidRootPart")
     local playerTorso = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if targetTorso and playerTorso then
-        local direction = (targetTorso.Position - playerTorso.Position).Unit
-        local ray = workspace:Raycast(playerTorso.Position, direction * 500)  -- Increase raycast distance
+        local direction = (targetTorso.Position - playerTorso.Position)
+        local ray = workspace:Raycast(playerTorso.Position, direction.Unit * direction.Magnitude)
 
-        -- Check if the ray hit the target's HumanoidRootPart and not something else like a wall
-        if ray then
-            local hitPart = ray.Instance
-            -- Ensure the ray hit the target and not an obstruction
-            if hitPart:IsDescendantOf(targetCharacter) then
-                return true
-            end
-        end
+        return ray and ray.Instance and ray.Instance:IsDescendantOf(targetCharacter)
     end
 
     return false
 end
 
--- Function to find the closest player to the center of the screen, excluding teammates
+-- Function to find the closest player to the center of the screen or the cursor
 local function getClosestTarget()
     local closestTarget = nil
     local smallestAngle = math.huge
     local cameraPosition = Camera.CFrame.Position
     local cameraLookVector = Camera.CFrame.LookVector
+
+    -- Get the mouse's position
+    local mousePosition = UserInputService:GetMouseLocation()
 
     for _, player in ipairs(Players:GetPlayers()) do
         -- Exclude the local player and players on the same team
@@ -62,10 +58,16 @@ local function getClosestTarget()
             local directionToTarget = (targetPosition - cameraPosition).Unit
             local angle = math.acos(cameraLookVector:Dot(directionToTarget))
 
-            -- Check if the target is within a reasonable field of view and is visible (no obstructions)
-            if angle < math.rad(45) and isPlayerVisible(character) and angle < smallestAngle then
-                closestTarget = character
-                smallestAngle = angle
+            -- Check if the target is visible and within FOV
+            if isPlayerVisible(character) and angle < math.rad(45) then
+                -- Lock onto the closest player in the FOV or closest to the mouse
+                local screenPosition = Camera:WorldToScreenPoint(targetPosition)
+                local distance = (Vector2.new(screenPosition.X, screenPosition.Y) - mousePosition).Magnitude
+
+                if angle < smallestAngle or distance < 100 then
+                    closestTarget = character
+                    smallestAngle = angle
+                end
             end
         end
     end
@@ -83,7 +85,7 @@ local function updateAimAssist(deltaTime)
         local newDirection = currentCameraDirection:Lerp(desiredDirection, smoothSpeed)
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + newDirection)
     else
-        -- Stop if target is invalid or no longer visible
+        -- Stop if target is invalid
         stopAimAssist()
     end
 end
