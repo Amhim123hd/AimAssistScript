@@ -1,31 +1,49 @@
-wait(1) -- Optional: wait for 1 second to ensure services are loaded
+--[[ 
+  This script displays a GUI with an auto-incrementing version number each time it's executed.
+  It saves the version number in a file so it persists across executions.
+  (Requires executor file I/O functions: isfile, readfile, writefile)
+]]
 
-local UserInputService = game:GetService("UserInputService")
+-- Version storage file
+local versionFile = "scriptVersion.txt"
 
--- Changeable key mapping:
--- When the player presses "C", we run the sequence: "C", then "X", then "Z"
-local keyMappings = {
-    C = {"C", "X", "Z"}
-}
-
--- This function “simulates” the sequence.
--- In this example, it just prints the key names.
-local function simulateKeySequence(sequence, delayBetween)
-    delayBetween = delayBetween or 0.1  -- default delay is 0.1 seconds between actions
-    for i, key in ipairs(sequence) do
-        print("Simulated key press: " .. key)
-        wait(delayBetween)
-    end
-end
-
--- Listen for player input
-UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-    if gameProcessedEvent then return end
-
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        local keyName = input.KeyCode.Name  -- e.g. "C"
-        if keyMappings[keyName] then
-            simulateKeySequence(keyMappings[keyName])
+-- Function to get the current version
+local function getCurrentVersion()
+    if isfile(versionFile) then
+        local versionStr = readfile(versionFile)
+        if type(versionStr) == "string" and versionStr:sub(1,1) == "v" then
+            return versionStr
         end
     end
-end)
+    return "v1"  -- Default to v1 if no file exists
+end
+
+-- Function to increment version
+local function incrementVersion(versionStr)
+    local num = tonumber(versionStr:sub(2)) or 1
+    num = num + 1
+    return "v" .. num
+end
+
+-- Get and update version number
+local currentVersion = getCurrentVersion()
+local newVersion = incrementVersion(currentVersion)
+writefile(versionFile, newVersion) -- Save the new version
+
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui  -- Works only in executors
+
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Parent = ScreenGui
+TextLabel.Size = UDim2.new(0, 200, 0, 50)
+TextLabel.Position = UDim2.new(0.5, -100, 0.1, 0) -- Centered near the top
+TextLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.Text = "Script Version: " .. currentVersion
+TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.TextSize = 20
+TextLabel.BackgroundTransparency = 0.3
+TextLabel.BorderSizePixel = 0
+
+print("Script executed. Current version: " .. currentVersion)
