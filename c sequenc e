@@ -1,0 +1,31 @@
+wait(1) -- Optional: wait for 1 second to ensure services are loaded
+
+local UserInputService = game:GetService("UserInputService")
+
+-- Changeable key mapping:
+-- When the player presses "C", we run the sequence: "C", then "X", then "Z"
+local keyMappings = {
+    C = {"C", "X", "Z"}
+}
+
+-- This function “simulates” the sequence.
+-- In this example, it just prints the key names.
+local function simulateKeySequence(sequence, delayBetween)
+    delayBetween = delayBetween or 0.1  -- default delay is 0.1 seconds between actions
+    for i, key in ipairs(sequence) do
+        print("Simulated key press: " .. key)
+        wait(delayBetween)
+    end
+end
+
+-- Listen for player input
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if gameProcessedEvent then return end
+
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        local keyName = input.KeyCode.Name  -- e.g. "C"
+        if keyMappings[keyName] then
+            simulateKeySequence(keyMappings[keyName])
+        end
+    end
+end)
